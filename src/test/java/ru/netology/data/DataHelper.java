@@ -1,9 +1,11 @@
 package ru.netology.data;
 
+import com.github.javafaker.Faker;
 import lombok.SneakyThrows;
 import lombok.Value;
 
 import java.sql.DriverManager;
+import java.util.Locale;
 
 public class DataHelper {
     private DataHelper() {
@@ -19,6 +21,14 @@ public class DataHelper {
         return new AuthInfo("vasya", "qwerty123");
     }
 
+    public static AuthInfo invalidGetAuthInfo() {
+        Faker faker = new Faker();
+        return new AuthInfo(
+                faker.name().fullName(),
+                faker.internet().password()
+        );
+    }
+
 
     @Value
     public static class VerificationCode {
@@ -27,7 +37,7 @@ public class DataHelper {
 
     @SneakyThrows
     public static VerificationCode getVerificationCodeFor(AuthInfo authInfo) {
-        var authCodeSQL = "SELECT * FROM auth_codes;";
+        var authCodeSQL = "SELECT code FROM auth_codes ORDER BY created DESC LIMIT 1;";
 
         var authCode = 0;
         try (
@@ -39,11 +49,13 @@ public class DataHelper {
 
             try (var rs = countStmt.executeQuery(authCodeSQL)) {
                 if (rs.next()) {
-                    authCode = rs.getInt(1);
+                    authCode = rs.getInt("code");
                 }
             }
         }
         String result = String.valueOf(authCode);
         return new VerificationCode(result);
     }
+
+
 }
