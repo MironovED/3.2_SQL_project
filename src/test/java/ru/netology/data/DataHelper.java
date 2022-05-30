@@ -3,9 +3,10 @@ package ru.netology.data;
 import com.github.javafaker.Faker;
 import lombok.SneakyThrows;
 import lombok.Value;
+import org.apache.commons.dbutils.QueryRunner;
 
 import java.sql.DriverManager;
-import java.util.Locale;
+import java.sql.SQLException;
 
 public class DataHelper {
     private DataHelper() {
@@ -21,6 +22,7 @@ public class DataHelper {
         return new AuthInfo("vasya", "qwerty123");
     }
 
+
     public static AuthInfo invalidGetAuthInfo() {
         Faker faker = new Faker();
         return new AuthInfo(
@@ -29,6 +31,13 @@ public class DataHelper {
         );
     }
 
+    public static AuthInfo invalidGetPassword() {
+        Faker faker = new Faker();
+        return new AuthInfo(
+                "vasya",
+                faker.internet().password()
+        );
+    }
 
     @Value
     public static class VerificationCode {
@@ -57,5 +66,23 @@ public class DataHelper {
         return new VerificationCode(result);
     }
 
+    @SneakyThrows
+    public static void clearDB() {
+        var deleteCode = "DELETE FROM auth_codes";
+        var deleteTransaction = "DELETE FROM card_transactions";
+        var deleteCard = "DELETE FROM cards";
+        var deleteUser = "DELETE FROM users";
+        var runner = new QueryRunner();
+        try (var conn = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/app", "user", "pass")
+        ) {
+            runner.update(conn, deleteCode);
+            runner.update(conn, deleteTransaction);
+            runner.update(conn, deleteCard);
+            runner.update(conn, deleteUser);
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+    }
 
 }
